@@ -1,0 +1,18 @@
+# Unreal Engine standard ignores
+Binaries/
+DerivedDataCache/
+Intermediate/
+Saved/
+.vs/
+*.sln
+*.opensdf
+*.sdf
+*.suo
+*.pdb
+*.db
+*.opendb
+*.VC.db
+
+# Rider / VSCode
+.idea/
+.vscode/
