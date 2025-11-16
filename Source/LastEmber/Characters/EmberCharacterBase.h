@@ -39,7 +39,21 @@ protected:
 	void Fire(const FInputActionValue& Value);
 	void ADS(const FInputActionValue& Value);
 	void ToggleBuildMode(const FInputActionValue& Value);
+	// Camera
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Camera")
+	class USpringArmComponent* ThirdPersonSpringArm;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Camera")
+	class UCameraComponent* ThirdPersonCamera;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Camera")
+	class UCameraComponent* FirstPersonCamera;
 
+	bool bIsFirstPerson = true;
+	
+	void TogglePerspective(const FInputActionValue& Value);
+	
+	// First Person mesh
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Mesh")
+	class USkeletalMeshComponent* FirstPersonMesh;
 public:
 	virtual void Tick(float DeltaTime) override;
 };
