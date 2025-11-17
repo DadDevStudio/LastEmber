@@ -18,11 +18,22 @@ public class LastEmber : ModuleRules
 			"StateTreeModule",
 			"GameplayStateTreeModule",
 			"UMG",
-			"Slate"
+			"Slate",
+			"GameplayTags",
+			"NetCore",              
+			"Networking", 
+			"ReplicationGraph"
 		});
 
-		PrivateDependencyModuleNames.AddRange(new string[] { });
-
+		PrivateDependencyModuleNames.AddRange(
+			new string[]
+			{
+				"CoreUObject",
+				"Engine",
+				"NetCore",              // <-- WAŻNE
+				"ReplicationGraph"     // <-- jeśli chcemy duże serwery
+			}
+		);
 		PublicIncludePaths.AddRange(new string[] {
 			"LastEmber",
 			"LastEmber/Variant_Platforming",
