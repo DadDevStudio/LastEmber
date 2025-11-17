@@ -2,9 +2,12 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputAction.h"
+#include "InputMappingContext.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Weapons/Base/WeaponBase.h"
 
 AEmberCharacterBase::AEmberCharacterBase()
 {
@@ -42,31 +45,31 @@ AEmberCharacterBase::AEmberCharacterBase()
 	FirstPersonCamera->SetRelativeLocation(FVector(0.f, 0.f, 64.f)); // height of eyes
 	FirstPersonCamera->bUsePawnControlRotation = true;
 
-	// === FIRST PERSON MESH ===
-	FirstPersonMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FirstPersonMesh"));
-	FirstPersonMesh->SetupAttachment(FirstPersonCamera);
-	FirstPersonMesh->SetOnlyOwnerSee(true);
-	FirstPersonMesh->bCastDynamicShadow = false;
-	FirstPersonMesh->CastShadow = false;
-
 	// === DEFAULT VIEW ===
 	bIsFirstPerson = true;
 	ThirdPersonSpringArm->SetHiddenInGame(true);
 	ThirdPersonCamera->SetActive(false);
 	FirstPersonCamera->SetActive(true);
+	
 }
 
 void AEmberCharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
-
-	if (IsLocallyControlled())
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
 	{
-		// Hide TP mesh for owner (player sees only FP mesh)
-		GetMesh()->SetOwnerNoSee(true);
-
-		// Ensure FP mesh is visible only for owner
-		FirstPersonMesh->SetOwnerNoSee(false);
+		if (ULocalPlayer* LP = PC->GetLocalPlayer())
+		{
+			if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
+				LP->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
+			{
+				Subsystem->AddMappingContext(
+					LoadObject<UInputMappingContext>(nullptr,
+						TEXT("/Game/Input/IMC/IMC_Default.IMC_Default")),
+					0
+				);
+			}
+		}
 	}
 }
 
@@ -219,17 +222,34 @@ void AEmberCharacterBase::TogglePerspective(const FInputActionValue&)
 
 	if (bIsFirstPerson)
 	{
+		// === FIRST PERSON ===
 		FirstPersonCamera->SetActive(true);
 		ThirdPersonCamera->SetActive(false);
 		ThirdPersonSpringArm->SetHiddenInGame(true);
+
+		// Ukrycie górnej części ciała
+		GetMesh()->UnHideBoneByName(TEXT("pelvis")); // just in case
+		GetMesh()->HideBoneByName(TEXT("head"), EPhysBodyOp::PBO_None);
+		GetMesh()->HideBoneByName(TEXT("neck_01"), EPhysBodyOp::PBO_None);
+		// GetMesh()->HideBoneByName(TEXT("neck_02"), EPhysBodyOp::PBO_None);
+		// GetMesh()->HideBoneByName(TEXT("spine_03"), EPhysBodyOp::PBO_None);
+
+		// Ręce zostawiamy widoczne
 	}
 	else
 	{
+		// === THIRD PERSON ===
 		FirstPersonCamera->SetActive(false);
 		ThirdPersonCamera->SetActive(true);
 		ThirdPersonSpringArm->SetHiddenInGame(false);
+
+		// Odkrycie całości
+		GetMesh()->UnHideBoneByName(TEXT("head"));
+		GetMesh()->UnHideBoneByName(TEXT("neck_01"));
+		GetMesh()->UnHideBoneByName(TEXT("spine_03"));
 	}
 }
+
 
 // ========= EMPTY ACTIONS =========
 
@@ -239,3 +259,19 @@ void AEmberCharacterBase::UseItem(const FInputActionValue&) {}
 void AEmberCharacterBase::Fire(const FInputActionValue&) {}
 void AEmberCharacterBase::ADS(const FInputActionValue&) {}
 void AEmberCharacterBase::ToggleBuildMode(const FInputActionValue&) {}
+
+void AEmberCharacterBase::EquipWeapon(AWeaponBase* NewWeapon)
+{
+	if (!NewWeapon) return;
+
+	// Usuwamy starą broń
+	if (EquippedWeapon)
+	{
+		EquippedWeapon->OnUnequipped();
+	}
+
+	EquippedWeapon = NewWeapon;
+
+	// Podpinamy nową
+	EquippedWeapon->OnEquipped(this);
+}

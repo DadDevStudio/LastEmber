@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "EmberCharacterBase.generated.h"
 
 UCLASS()
@@ -39,6 +40,7 @@ protected:
 	void Fire(const FInputActionValue& Value);
 	void ADS(const FInputActionValue& Value);
 	void ToggleBuildMode(const FInputActionValue& Value);
+	void EquipWeapon(AActor* WeaponActor);
 	// Camera
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Camera")
 	class USpringArmComponent* ThirdPersonSpringArm;
@@ -51,9 +53,11 @@ protected:
 	
 	void TogglePerspective(const FInputActionValue& Value);
 	
-	// First Person mesh
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Mesh")
-	class USkeletalMeshComponent* FirstPersonMesh;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	AWeaponBase* EquippedWeapon;
+
+	UFUNCTION(BlueprintCallable)
+	void EquipWeapon(AWeaponBase* NewWeapon);
 public:
 	virtual void Tick(float DeltaTime) override;
 };

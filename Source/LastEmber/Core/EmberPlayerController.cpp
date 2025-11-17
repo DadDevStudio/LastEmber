@@ -11,7 +11,7 @@ AEmberPlayerController::AEmberPlayerController()
 	bEnableMouseOverEvents = false;
 	
 	static ConstructorHelpers::FObjectFinder<UInputMappingContext> MappingContextFinder(
-	TEXT("/Game/Input/IMC_Default.IMC_Default") );
+	TEXT("/Game/Input/IMC/IMC_Default.IMC_Default") );
 	if (MappingContextFinder.Succeeded())
 	{
 		DefaultMappingContext = MappingContextFinder.Object;
