@@ -7,53 +7,14 @@ public class LastEmber : ModuleRules
 	public LastEmber(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+	
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput" });
 
-		PublicDependencyModuleNames.AddRange(new string[] {
-			"Core",
-			"CoreUObject",
-			"Engine",
-			"InputCore",
-			"EnhancedInput",
-			"AIModule",
-			"StateTreeModule",
-			"GameplayStateTreeModule",
-			"UMG",
-			"Slate",
-			"GameplayTags",
-			"NetCore",              
-			"Networking", 
-			"ReplicationGraph"
-		});
-
-		PrivateDependencyModuleNames.AddRange(
-			new string[]
-			{
-				"CoreUObject",
-				"Engine",
-				"NetCore",              // <-- WAŻNE
-				"ReplicationGraph"     // <-- jeśli chcemy duże serwery
-			}
-		);
-		PublicIncludePaths.AddRange(new string[] {
-			"LastEmber",
-			"LastEmber/Variant_Platforming",
-			"LastEmber/Variant_Platforming/Animation",
-			"LastEmber/Variant_Combat",
-			"LastEmber/Variant_Combat/AI",
-			"LastEmber/Variant_Combat/Animation",
-			"LastEmber/Variant_Combat/Gameplay",
-			"LastEmber/Variant_Combat/Interfaces",
-			"LastEmber/Variant_Combat/UI",
-			"LastEmber/Variant_SideScrolling",
-			"LastEmber/Variant_SideScrolling/AI",
-			"LastEmber/Variant_SideScrolling/Gameplay",
-			"LastEmber/Variant_SideScrolling/Interfaces",
-			"LastEmber/Variant_SideScrolling/UI"
-		});
+		PrivateDependencyModuleNames.AddRange(new string[] {  });
 
 		// Uncomment if you are using Slate UI
 		// PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
-
+		
 		// Uncomment if you are using online features
 		// PrivateDependencyModuleNames.Add("OnlineSubsystem");
 

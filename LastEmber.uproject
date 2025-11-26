@@ -1,18 +1,13 @@
 {
 	"FileVersion": 3,
-	"EngineAssociation": "{2D94245E-4424-B0B9-2A5F-CD90939887C0}",
+	"EngineAssociation": "5.7",
 	"Category": "",
 	"Description": "",
 	"Modules": [
 		{
 			"Name": "LastEmber",
 			"Type": "Runtime",
-			"LoadingPhase": "Default",
-			"AdditionalDependencies": [
-				"Engine",
-				"AIModule",
-				"UMG"
-			]
+			"LoadingPhase": "Default"
 		}
 	],
 	"Plugins": [
@@ -24,15 +19,11 @@
 			]
 		},
 		{
-			"Name": "StateTree",
+			"Name": "GameplayAbilities",
 			"Enabled": true
 		},
 		{
-			"Name": "GameplayStateTree",
-			"Enabled": true
-		},
-		{
-			"Name": "AIAssistant",
+			"Name": "Mover",
 			"Enabled": true
 		},
 		{
