@@ -6,6 +6,7 @@
 #include "Core/LastEmberPlayerController.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "Core/LastEmberCharacterBase.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -49,6 +50,10 @@ void ALastEmberPlayerController::SetupInputComponent()
 
         if (JumpAction)
             EIC->BindAction(JumpAction, ETriggerEvent::Started, this, &ALastEmberPlayerController::HandleJump);
+        if (TogglePerspectiveAction)
+        {
+            EIC->BindAction(TogglePerspectiveAction, ETriggerEvent::Started, this, &ALastEmberPlayerController::HandleTogglePerspective);
+        }
     }
 }
 
@@ -72,4 +77,12 @@ void ALastEmberPlayerController::Look(const FInputActionValue& Value)
     const FVector2D LookAxis = Value.Get<FVector2D>();
     this->AddYawInput(LookAxis.X);   // użyj "this->" lub upewnij się, że metoda jest członkiem klasy
     this->AddPitchInput(LookAxis.Y);
+}
+
+void ALastEmberPlayerController::HandleTogglePerspective()
+{
+    if (ALastEmberCharacterBase* Char = Cast<ALastEmberCharacterBase>(GetPawn()))
+    {
+        Char->ToggleCameraView(); // to funkcja z wcześniejszego kroku, która przełącza kamerę
+    }
 }

@@ -15,7 +15,7 @@
 
 class UEnhancedInputComponent;
 class UEnhancedInputLocalPlayerSubsystem;
-
+class ALastEmberCharacterBase;
 /**
  * PlayerController for Last Ember - handles Enhanced Input bindings
  */
@@ -40,9 +40,12 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UInputAction> JumpAction;
-
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Input|Actions")
+	TObjectPtr<UInputAction> TogglePerspectiveAction;
 private:
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
 	void HandleJump();
+	void HandleTogglePerspective();
 };
