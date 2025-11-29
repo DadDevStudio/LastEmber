@@ -7,6 +7,7 @@
 #include "LEGameMode.generated.h"
 
 class ALEPlayerController;
+class ALEPlayerState;
 /**
  * 
  */
@@ -16,9 +17,9 @@ class LASTEMBER_API ALEGameMode : public AGameModeBase
 	GENERATED_BODY()
 	
 public:
-	// Constuctor
+	// Constructor
 	ALEGameMode();
-	
+	virtual void PostLogin(APlayerController* NewPlayer) override;
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;

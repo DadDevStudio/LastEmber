@@ -1,9 +1,13 @@
 ﻿// © 2025 Dad Dev Studio. All Rights Reserved. Unauthorized distribution or modification is prohibited.
 
 #include "LastEmber/Public/GameFramework/LEPlayerController.h"
+
+#include "AbilitySystemComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
+#include "Abilities/LEGA_Shoot.h"
 #include "Characters/LECharacter.h"
+#include "GameFramework/LEPlayerState.h"
 
 // Constructor
 ALEPlayerController::ALEPlayerController()
@@ -43,7 +47,8 @@ void ALEPlayerController::SetupInputComponent()
         
         // Bind Shoot action
         EnhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Started, this, &ALEPlayerController::Shoot);
-        
+        // Bind Shoot action
+        EnhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Started, this, &ALEPlayerController::OnShootAction);
     }
 }
 
@@ -82,4 +87,39 @@ void ALEPlayerController::Jump()
 
 void ALEPlayerController::Shoot()  // zostawimy na później
 {
+}
+void ALEPlayerController::OnShootAction(const FInputActionValue& Value)
+{
+    // Try to locate ASC from PlayerState (server-owned)
+    if (PlayerState)
+    {
+        if (ALEPlayerState* PS = Cast<ALEPlayerState>(PlayerState))
+        {
+            if (UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent())
+            {
+                ASC->TryActivateAbilityByClass(ULEGA_Shoot::StaticClass());
+                UE_LOG(LogTemp, Warning, TEXT("[PC] TryActivateAbilityByClass called"));
+                return;
+            }
+        }
+    }
+
+    // Fallback: try pawn's PlayerState (if controller PlayerState is not set)
+    if (APawn* P = GetPawn())
+    {
+        if (APlayerState* PawnPSBase = P->GetPlayerState())
+        {
+            if (ALEPlayerState* PS = Cast<ALEPlayerState>(PawnPSBase))
+            {
+                if (UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent())
+                {
+                    ASC->TryActivateAbilityByClass(ULEGA_Shoot::StaticClass());
+                    UE_LOG(LogTemp, Warning, TEXT("[PC] TryActivateAbilityByClass called (pawn->ps)"));
+                    return;
+                }
+            }
+        }
+    }
+
+    UE_LOG(LogTemp, Warning, TEXT("[PC] OnShootAction - no ASC found to activate ability"));
 }

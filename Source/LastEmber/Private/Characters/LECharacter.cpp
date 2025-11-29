@@ -5,6 +5,8 @@
 
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "GameFramework/LEPlayerState.h"
+#include "AbilitySystemComponent.h"
 
 
 // Sets default values
@@ -86,7 +88,18 @@ void ALECharacter::StopJump()
 void ALECharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	// Jeśli PlayerState ma ASC, zainicjalizuj AbilityActorInfo (PS = owner, this = avatar)
+	if (APlayerState* PSBase = GetPlayerState())
+	{
+		if (ALEPlayerState* PS = Cast<ALEPlayerState>(PSBase))
+		{
+			if (UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent())
+			{
+				ASC->InitAbilityActorInfo(PS, this);
+				UE_LOG(LogTemp, Warning, TEXT("GAS: AbilityActorInfo initialized for %s"), *GetName());
+			}
+		}
+	}
 }
 
 // Called every frame

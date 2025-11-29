@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
-#include "InputActionValue.h"  // ← DODAJ TO!
+#include "InputActionValue.h" 
 #include "LEPlayerController.generated.h"
 
 class UInputMappingContext;
@@ -23,6 +23,9 @@ public:
 	// Constructor
 	ALEPlayerController();
 protected:
+	
+	void OnShootAction(const FInputActionValue& Value);
+
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	
