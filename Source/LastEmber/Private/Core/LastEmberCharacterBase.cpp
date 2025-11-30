@@ -8,7 +8,6 @@
 #include "GAS/LastEmberSurvivalComponent.h"
 // #include "GAS/LastEmberInventoryComponent.h"
 #include "Directors/BlueprintCameraDirector.h"
-// #include "GameFramework/GameplayCameraComponent.h"
 #include "GameFramework/GameplayCameraComponent.h"
 #include "Net/UnrealNetwork.h"
 ALastEmberCharacterBase::ALastEmberCharacterBase()
@@ -41,18 +40,18 @@ void ALastEmberCharacterBase::BeginPlay()
 	// 🔍 Szukamy komponentu lub obiektu typu UBlueprintCameraDirectorEvaluator
 	TArray<UActorComponent*> Components;
 	GetComponents(Components); // zamiast GetComponentsByClass — działa zawsze
-	for (UActorComponent* Comp : Components)
-	{
-		if (Comp->IsA(UBlueprintCameraDirectorEvaluator::StaticClass()))
-		{
-			CameraDirectorEvaluator = Cast<UBlueprintCameraDirectorEvaluator>(Comp);
-		}
-	}
-
-	if (!CameraDirectorEvaluator)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("No CameraDirectorEvaluator found on %s!"), *GetName());
-	}
+	// for (UActorComponent* Comp : Components)
+	// {
+	// 	if (Comp->IsA(UBlueprintCameraDirectorEvaluator::StaticClass()))
+	// 	{
+	// 		CameraDirectorEvaluator = Cast<UBlueprintCameraDirectorEvaluator>(Comp);
+	// 	}
+	// }
+	//
+	// if (!CameraDirectorEvaluator)
+	// {
+	// 	UE_LOG(LogTemp, Warning, TEXT("No CameraDirectorEvaluator found on %s!"), *GetName());
+	// }
 }
 
 void ALastEmberCharacterBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
