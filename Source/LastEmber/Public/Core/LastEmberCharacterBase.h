@@ -5,6 +5,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Core/LastEmberAnimSyncComponent.h"
 #include "LastEmberCharacterBase.generated.h"
 
 class ULastEmberSurvivalComponent;
@@ -26,7 +27,13 @@ public:
 	// Event do obsługi w BP — np. do zmiany kamery lub mesha
 	UFUNCTION(BlueprintImplementableEvent, Category="Camera")
 	void OnCameraModeChanged(bool bFirstPerson);
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Animation")
+	TObjectPtr<ULastEmberAnimSyncComponent> AnimSyncComponent;
 
+	// Mesh używany w trybie pierwszoosobowym
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Mesh")
+	USkeletalMeshComponent* FirstPersonMesh;
 protected:
 	virtual void BeginPlay() override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -51,11 +58,9 @@ protected:
 	UPROPERTY(ReplicatedUsing=OnRep_CameraMode, EditAnywhere, BlueprintReadWrite, Category="Camera")
 	bool bIsFirstPerson = false;
 	
-	// Mesh używany w trybie pierwszoosobowym
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Mesh")
-	USkeletalMeshComponent* FirstPersonMesh;
 	// UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	// ULastEmberInventoryComponent* InventoryComponent;
 	UFUNCTION()
 	void OnRep_CameraMode();
+	void PlayReload();
 };

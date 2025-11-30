@@ -7,6 +7,7 @@
 #include "AbilitySystemComponent.h"
 #include "GAS/LastEmberSurvivalComponent.h"
 // #include "GAS/LastEmberInventoryComponent.h"
+#include "Core/LastEmberAnimSyncComponent.h"
 #include "Directors/BlueprintCameraDirector.h"
 #include "GameFramework/GameplayCameraComponent.h"
 #include "Net/UnrealNetwork.h"
@@ -29,6 +30,16 @@ ALastEmberCharacterBase::ALastEmberCharacterBase()
 	// Domyślnie schowany (bo zaczynamy w TP)
 	FirstPersonMesh->SetHiddenInGame(true);
 	GetMesh()->SetHiddenInGame(false);
+	
+	AnimSyncComponent = CreateDefaultSubobject<ULastEmberAnimSyncComponent>(TEXT("AnimSyncComponent"));
+	static ConstructorHelpers::FClassFinder<UAnimInstance> Anim1P(TEXT("/Script/Engine.AnimBlueprint'/Game/Blueprints/Characters/Anims/ABP_Character_1P.ABP_Character_1P'"));
+	static ConstructorHelpers::FClassFinder<UAnimInstance> Anim3P(TEXT("/Script/Engine.AnimBlueprint'/Game/Blueprints/Characters/Anims/ABP_Character_3P.ABP_Character_3P'"));
+
+	if (Anim1P.Succeeded())
+		FirstPersonMesh->SetAnimInstanceClass(Anim1P.Class);
+
+	if (Anim3P.Succeeded())
+		GetMesh()->SetAnimInstanceClass(Anim3P.Class);
 }
 
 void ALastEmberCharacterBase::BeginPlay()
@@ -105,4 +116,15 @@ void ALastEmberCharacterBase::OnRep_CameraMode()
 	}
 
 	OnCameraModeChanged(bIsFirstPerson);
+}
+void ALastEmberCharacterBase::PlayReload()
+{
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> ReloadMontage(
+		TEXT("/Game/Characters/Animations/Montages/M_Reload.M_Reload"));
+
+	if (ReloadMontage.Succeeded())
+	{
+		if (AnimSyncComponent)
+			AnimSyncComponent->PlaySharedMontage(ReloadMontage.Object);
+	}
 }
