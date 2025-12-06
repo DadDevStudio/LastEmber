@@ -10,29 +10,24 @@ jobs:
   backup:
     runs-on: ubuntu-latest
     steps:
-      
-      # 1. Pobieramy kod (LFS wyłączone, bo nie potrzebujemy ciężkich assetów!)
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          lfs: false 
+          lfs: false
           fetch-depth: 0
 
-      # 2. Instalujemy Rclone
-      - name: Setup Rclone
+      - name: Install rclone
         run: |
           sudo -v ; curl https://rclone.org/install.sh | sudo bash
 
-      # 3. Konfiguracja
-      - name: Configure Rclone
+      - name: Setup rclone config
         run: |
-          echo '${{ secrets.GDRIVE_SA_KEY }}' > service_account.json
-          rclone config create mydrive drive scope=drive service_account_file=service_account.json
+          mkdir -p ~/.config/rclone
+          echo "${{ secrets.RCLONE_CONFIG }}" > ~/.config/rclone/rclone.conf
 
-      # 4. Synchronizacja TYLKO KODU (Bez .uasset, .umap)
       - name: Sync to Google Drive
         run: |
-          rclone sync . mydrive:LastEmber_GitHub_Mirror \
+          rclone sync . lastember_drive:LastEmber_GitHub_Mirror \
             --exclude ".git/**" \
             --exclude ".github/**" \
             --exclude "Intermediate/**" \
@@ -43,4 +38,4 @@ jobs:
             --exclude "**/*.umap" \
             --exclude "**/*.map" \
             --progress \
-            --transfers=8
+            --transfers=4
