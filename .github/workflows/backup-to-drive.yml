@@ -1,4 +1,4 @@
-name: Mirror to Google Drive
+name: Mirror to Google Drive (Code Only)
 
 on:
   push:
@@ -11,25 +11,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       
-      # 1. Pobieramy kod z GitHuba
+      # 1. Pobieramy kod (LFS wyłączone, bo nie potrzebujemy ciężkich assetów!)
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          lfs: true
+          lfs: false 
           fetch-depth: 0
 
-      # 2. Instalujemy Rclone (Metoda bezpośrednia - niezawodna)
+      # 2. Instalujemy Rclone
       - name: Setup Rclone
         run: |
           sudo -v ; curl https://rclone.org/install.sh | sudo bash
 
-      # 3. Konfigurujemy połączenie używając Twojego sekretu
+      # 3. Konfiguracja
       - name: Configure Rclone
         run: |
           echo '${{ secrets.GDRIVE_SA_KEY }}' > service_account.json
           rclone config create mydrive drive scope=drive service_account_file=service_account.json
 
-      # 4. Synchronizujemy (GitHub -> Google Drive)
+      # 4. Synchronizacja TYLKO KODU (Bez .uasset, .umap)
       - name: Sync to Google Drive
         run: |
           rclone sync . mydrive:LastEmber_GitHub_Mirror \
@@ -39,5 +39,8 @@ jobs:
             --exclude "Saved/**" \
             --exclude "Binaries/**" \
             --exclude "DerivedDataCache/**" \
+            --exclude "**/*.uasset" \
+            --exclude "**/*.umap" \
+            --exclude "**/*.map" \
             --progress \
             --transfers=8
