@@ -1,0 +1,45 @@
+name: Mirror to Google Drive
+
+on:
+  push:
+    branches:
+      - main  # Synchronizacja ruszy po wrzuceniu zmian na gałąź 'main'
+  workflow_dispatch: # Pozwala też uruchomić to ręcznie przyciskiem w zakładce Actions
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      
+      # 1. Pobieramy kod z GitHuba
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          lfs: true # Pobiera też duże pliki (assets)
+          fetch-depth: 0
+
+      # 2. Instalujemy narzędzie Rclone
+      - name: Setup Rclone
+        uses: animinvor/setup-rclone@v1
+        with:
+          rclone_version: v1.66.0
+
+      # 3. Konfigurujemy połączenie używając Twojego sekretu
+      - name: Configure Rclone
+        run: |
+          echo '${{ secrets.GDRIVE_SA_KEY }}' > service_account.json
+          rclone config create mydrive drive scope=drive service_account_file=service_account.json
+
+      # 4. Synchronizujemy (GitHub -> Google Drive)
+      # Flaga --delete-excluded sprawia, że Drive będzie idealną kopią (usunie pliki, których nie ma na GitHubie)
+      - name: Sync to Google Drive
+        run: |
+          rclone sync . mydrive:LastEmber_GitHub_Mirror \
+            --exclude ".git/**" \
+            --exclude ".github/**" \
+            --exclude "Intermediate/**" \
+            --exclude "Saved/**" \
+            --exclude "Binaries/**" \
+            --exclude "DerivedDataCache/**" \
+            --progress \
+            --transfers=8
