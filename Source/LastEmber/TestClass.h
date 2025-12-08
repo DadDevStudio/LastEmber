@@ -4,3 +4,12 @@
 
 #include "CoreMinimal.h"
 
+/**
+ * 
+ */
+class LASTEMBER_API TestClass
+{
+public:
+	TestClass();
+	~TestClass();
+};
