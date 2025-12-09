@@ -7,6 +7,7 @@
 #include "AbilitySystemInterface.h"
 #include "GameplayTagContainer.h"
 #include "LastEmber/UI/LastEmberHUDWidget.h"
+#include "LastEmber/Interfaces/LastEmberInteractable.h"
 #include "LastEmberCharacter.generated.h"
 
 // Forward declaration - mówimy, że te klasy istnieją, żeby nie zaśmiecać nagłówka
@@ -35,7 +36,8 @@ public:
 	// Wymagane przez interfejs IAbilitySystemInterface.
 	// Dzięki temu inne systemy wiedzą, że ta postać ma statystyki.
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
-
+	// To woła AttributeSet, gdy HP spadnie do 0
+	virtual void HandleDeath();
 protected:
 	virtual void BeginPlay() override;
 	
@@ -57,4 +59,27 @@ protected:
 	void InitHUD();
 
 	// ... zmienne HUDWidgetClass i HUDInstance ...
+	
+
+	// Zmienna, żeby nie umrzeć dwa razy w jednej klatce
+	bool bIsDead = false;
+
+	// Funkcja sieciowa typu Multicast - wywołana na serwerze, wykonuje się u wszystkich
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_Die();
+	// Funkcja podpięta pod klawisz E
+	// Zmieniamy to na UFUNCTION, żeby Blueprint to widział
+	UFUNCTION(BlueprintCallable, Category = "LastEmber|Interaction")
+	void OnInteractInput();
+
+	// Zmienna do trzymania Input Action (przypiszemy w Blueprincie)
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<class UInputAction> IA_Interact;
+	
+	// Nowa funkcja: Server RPC. 
+	// "Reliable" oznacza, że pakiet musi dotrzeć (ważne dla rozgrywki).
+	// "WithValidation" to zabezpieczenie (np. czy gracz nie oszukuje), Unreal wymaga tego w starszych wersjach, 
+	// ale w nowszych wystarczy samo Reliable. Zrobimy wersję prostą.
+	UFUNCTION(Server, Reliable)
+	void Server_Interact(AActor* TargetActor);
 };

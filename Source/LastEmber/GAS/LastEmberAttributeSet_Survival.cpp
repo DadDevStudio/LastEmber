@@ -3,6 +3,7 @@
 
 #include "LastEmberAttributeSet_Survival.h"
 #include "Net/UnrealNetwork.h"
+#include "LastEmber/Characters/LastEmberCharacter.h"
 #include "GameplayEffectExtension.h" // Potrzebne do obsługi PostGameplayEffectExecute
 
 ULastEmberAttributeSet_Survival::ULastEmberAttributeSet_Survival()
@@ -11,7 +12,7 @@ ULastEmberAttributeSet_Survival::ULastEmberAttributeSet_Survival()
 	InitHealth(100.0f);
 	InitMaxHealth(100.0f);
 
-	InitHunger(100.0f);    // Startujemy najedzeni
+	InitHunger(50.0f);    // Startujemy najedzeni
 	InitMaxHunger(100.0f);
 
 	InitThirst(100.0f);    // Startujemy nawodnieni
@@ -99,6 +100,57 @@ void ULastEmberAttributeSet_Survival::PostGameplayEffectExecute(const FGameplayE
 	{
 		SetInfection(FMath::Clamp(GetInfection(), 0.0f, GetMaxInfection()));
 	}
+	// --- Logika Zdrowia ---
+	if (Data.EvaluatedData.Attribute == GetHealthAttribute())
+	{
+		// Clampujemy HP (żeby nie było -50)
+		SetHealth(FMath::Clamp(GetHealth(), 0.0f, GetMaxHealth()));
+		
+		// SPRAWDZAMY CZY UMARŁ
+		if (GetHealth() <= 0.0f)
+		{
+			// Pobieramy aktora, który posiada te atrybuty
+			AActor* TargetActor = Data.Target.AbilityActorInfo->AvatarActor.Get();
+			
+			// Rzutujemy na naszą postać
+			ALastEmberCharacter* MyChar = Cast<ALastEmberCharacter>(TargetActor);
+			
+			// Jeśli to nasza postać i jeszcze nie wykonaliśmy procedury śmierci...
+			if (MyChar)
+			{
+				MyChar->HandleDeath();
+			}
+		}
+	}
+	
+	// --- Logika Głodu (Śmierć głodowa) ---
+	else if (Data.EvaluatedData.Attribute == GetHungerAttribute())
+	{
+		SetHunger(FMath::Clamp(GetHunger(), 0.0f, GetMaxHunger()));
+
+		// Jeśli głód spadł do 0 -> Zabieramy HP
+		if (GetHunger() <= 0.0f)
+		{
+			// Tutaj stosujemy "sztuczkę". Zamiast odpalać GameplayEffect, 
+			// możemy bezpośrednio odjąć zdrowie w kodzie dla uproszczenia,
+			// chociaż profesjonalnie powinno się nałożyć efekt "Starvation Damage".
+			
+			// Wersja prosta (Direct Modification):
+			// Odejmujemy 1 HP przy każdej aktualizacji (czyli co sekundę, bo HungerDecay tyka co sekundę)
+			const float StarvationDamage = 5.0f;
+			SetHealth(FMath::Clamp(GetHealth() - StarvationDamage, 0.0f, GetMaxHealth()));
+			
+			// Jeśli to odejmowanie zabiło gracza, musimy ręcznie wywołać sprawdzenie śmierci,
+			// bo zmiana wartości przez Setter nie zawsze wywołuje PostGameplayEffectExecute dla Health.
+			if (GetHealth() <= 0.0f)
+			{
+				AActor* TargetActor = Data.Target.AbilityActorInfo->AvatarActor.Get();
+				ALastEmberCharacter* MyChar = Cast<ALastEmberCharacter>(TargetActor);
+				if (MyChar) MyChar->HandleDeath();
+			}
+		}
+	}
+	// ... reszta kodu (Thirst, Infection) ...
 }
 
 // --- BOILERPLATE REPLIKACJI ---

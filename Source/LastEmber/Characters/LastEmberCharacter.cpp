@@ -3,9 +3,16 @@
 
 #include "LastEmberCharacter.h"
 #include "AbilitySystemComponent.h"
-// Upewnij się, że ta ścieżka pasuje do miejsca, gdzie stworzyłeś plik atrybutów:
-#include "Blueprint/UserWidget.h"
-#include "LastEmber/GAS/LastEmberAttributeSet_Survival.h" 
+#include "LastEmber/GAS/LastEmberAttributeSet_Survival.h"
+#include "LastEmber/UI/LastEmberHUDWidget.h" // Twój Widget
+#include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetSystemLibrary.h" // Do debugowania linii (DrawDebugLine)
+#include "LastEmber/System/LastEmberGameMode.h"
+
+// --- WAŻNE NAGŁÓWKI DO NAPRAWY BŁĘDÓW ---
+#include "MoverComponent.h"                // Naprawia błąd "UMoverComponent undefined"
+#include "Components/CapsuleComponent.h"   // Naprawia błąd kapsuły
+#include "Components/SkeletalMeshComponent.h" // Naprawia błąd mesha
 
 ALastEmberCharacter::ALastEmberCharacter()
 {
@@ -80,5 +87,122 @@ void ALastEmberCharacter::InitHUD()
 				HUDInstance->InitializeWithGAS(AbilitySystemComponent, SurvivalAttributes);
 			}
 		}
+	}
+}
+void ALastEmberCharacter::HandleDeath()
+{
+	// [SERWER]
+	if (bIsDead) return;
+	bIsDead = true;
+
+	if (Controller)
+	{
+		DisableInput(Cast<APlayerController>(Controller));
+	}
+
+	Multicast_Die();
+
+	// Respawn Logic
+	ALastEmberGameMode* GM = Cast<ALastEmberGameMode>(UGameplayStatics::GetGameMode(this));
+	if (GM && Controller)
+	{
+		GM->RequestRespawn(Controller, 5.0f);
+	}
+}
+
+void ALastEmberCharacter::Multicast_Die_Implementation()
+{
+	// --- TUTAJ BYŁY BŁĘDY ---
+	
+	// 1. Mover Component (Szukamy go dynamicznie)
+	// Używamy GetComponentByClass zamiast FindComponentByClass (nowocześniejsze API Actora)
+	UMoverComponent* MoverComp = GetComponentByClass<UMoverComponent>();
+	if (MoverComp)
+	{
+		MoverComp->SetComponentTickEnabled(false);
+		MoverComp->Deactivate();
+	}
+
+	// 2. Capsule Component
+	// Ponieważ dziedziczymy po APawn, nie mamy funkcji GetCapsuleComponent().
+	// Musimy znaleźć komponent ręcznie.
+	UCapsuleComponent* CapsuleComp = GetComponentByClass<UCapsuleComponent>();
+	if (CapsuleComp)
+	{
+		CapsuleComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+
+	// 3. Mesh Component (Ragdoll)
+	// Tak samo - APawn nie ma funkcji GetMesh(). Szukamy SkeletalMeshComponent.
+	USkeletalMeshComponent* MeshComp = GetComponentByClass<USkeletalMeshComponent>();
+	if (MeshComp)
+	{
+		MeshComp->SetCollisionProfileName(TEXT("Ragdoll"));
+		// --- NOWOŚĆ: ODPIĘCIE OD KAPSUŁY ---
+		// Mówimy: "Zostań w tym miejscu świata, gdzie jesteś, ale nie bądź już dzieckiem Kapsuły"
+		MeshComp->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+		MeshComp->SetSimulatePhysics(true);
+	}
+
+	// 4. UI
+	if (IsLocallyControlled() && HUDInstance)
+	{
+		HUDInstance->RemoveFromParent();
+	}
+}
+// 2. Główna funkcja interakcji
+void ALastEmberCharacter::OnInteractInput()
+{
+	// 1. [KLIENT] Raycast i namierzanie
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (!PC) return;
+
+	FVector CameraLocation;
+	FRotator CameraRotation;
+	PC->GetPlayerViewPoint(CameraLocation, CameraRotation);
+
+	FVector TraceStart = CameraLocation;
+	FVector TraceEnd = TraceStart + (CameraRotation.Vector() * 2000.0f); // 20 metrów
+
+	FHitResult HitResult;
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this);
+
+	bool bHit = GetWorld()->LineTraceSingleByChannel(
+		HitResult,
+		TraceStart,
+		TraceEnd,
+		ECC_Visibility,
+		QueryParams
+	);
+
+	// Debug wizualny (tylko dla Ciebie lokalnie)
+	// DrawDebugLine(GetWorld(), TraceStart, TraceEnd, FColor::Red, false, 2.0f, 0, 2.0f);
+
+	if (bHit)
+	{
+		AActor* HitActor = HitResult.GetActor();
+		if (HitActor && HitActor->Implements<ULastEmberInteractable>())
+		{
+			// ZAMIAST OD RAZU ROBIĆ INTERAKCJĘ...
+			// ILastEmberInteractable::Execute_Interact(HitActor, this); <-- TO BYŁO LOKALNE (ZŁE)
+			
+			// ...WOŁAMY SERWER:
+			Server_Interact(HitActor);
+		}
+	}
+}
+
+// Implementacja funkcji serwerowej (musi mieć dopisek _Implementation)
+void ALastEmberCharacter::Server_Interact_Implementation(AActor* TargetActor)
+{
+	// 2. [SERWER] To wykonuje się na serwerze!
+	// Tutaj moglibyśmy dodać sprawdzenie odległości (anty-cheat), ale na razie ufamy klientowi.
+
+	if (TargetActor && TargetActor->Implements<ULastEmberInteractable>())
+	{
+		// Serwer wykonuje interakcję.
+		// Dzięki temu "Instigator Pawn" w Blueprincie puszki będzie Serwerową wersją postaci (tą, która ma władzę nad GAS).
+		ILastEmberInteractable::Execute_Interact(TargetActor, this);
 	}
 }
