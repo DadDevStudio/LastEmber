@@ -88,6 +88,10 @@
 		{
 			"Name": "CommonUI",
 			"Enabled": true
+		},
+		{
+			"Name": "ModularGameplay",
+			"Enabled": true
 		}
 	],
 	"EpicSampleNameHash": "1673045636"

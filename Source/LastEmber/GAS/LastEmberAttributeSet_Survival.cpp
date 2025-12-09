@@ -12,7 +12,7 @@ ULastEmberAttributeSet_Survival::ULastEmberAttributeSet_Survival()
 	InitHealth(100.0f);
 	InitMaxHealth(100.0f);
 
-	InitHunger(50.0f);    // Startujemy najedzeni
+	InitHunger(100.0f);    // Startujemy najedzeni
 	InitMaxHunger(100.0f);
 
 	InitThirst(100.0f);    // Startujemy nawodnieni
